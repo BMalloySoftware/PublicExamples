@@ -1,0 +1,70 @@
+string savePath = "";
+//allSavedInfo is a central dictionary that stores all the saved data for the game
+//It is organized by individually-assigned GUID for each asset
+//Each asset is a struct with a unique data structure based on the actual entity
+Dictionary<string, object> allSavedInfo = new();
+
+//Called from other scripts to load an existing game
+public void LoadGameFromSave(string saveFile)
+{
+  //Set the savePath to the provided save info
+  savePath = saveFile;
+
+  //Load all saved info from the provided saveFile;
+  allSavedInfo = LoadFile();
+}
+
+Dictionary<string, object> LoadFile()
+{
+  //If there is no existing save with that savePath, return blank save data
+  if (!File.Exists(savePath))
+    return new Dictionary<string, object>();
+
+  //Deserialize the save data and return
+  using (FileStream stream = File.Open(savePath, FileMode.Open))
+  {
+    var formatter = new BinaryFormatter();
+    return (Dictionary<string, object>)formatter.Deserialize(stream);
+  }
+}
+
+//Called from save buttons, etc
+public void CommitSave ()
+{
+  SaveFile(allSavedInfo);
+}
+
+//Take the saved data, serialize it, and commit to a save file
+void SaveFile(object state)
+{
+  using (var stream = File.Open(savePath, FileMode.Create))
+  {
+    var formatter = new BinaryFormatter();
+    formatter.Serialize(stream, state);
+  }
+}
+
+//Called from other scripts to check to see if an entity has any existing saved data
+public void CheckAsset (string assetID)
+{
+  return allSavedInfo.ContainsKey(assetID);
+}
+
+//Called from other scripts to load existing asset data to an entity
+public void LoadAsset(string assetID)
+{
+  return allSavedData(assetID);
+}
+
+//Called from other scripts to commit an entity's data to memory
+public void SaveAsset(string assetID, object asset)
+{
+  if (allSavedInfo.ContainsKey(assetID))
+  {
+    allSavedInfo[assetID] = asset;
+  }
+  else
+  {
+    allSavedInfo.Add(assetID, asset);
+  }
+}
